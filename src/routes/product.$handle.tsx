@@ -112,10 +112,10 @@ function ProductPage() {
           <p className="text-muted-foreground">{product.description}</p>
 
           {product.options.length > 0 &&
-            product.options[0].name !== "Title" && (
+            product.options[0]?.name !== "Title" && (
               <div className="flex flex-col gap-2">
                 <span className="text-sm font-semibold">
-                  {product.options[0].name}
+                  {product.options[0]?.name}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.edges.map(({ node: variant }) => (
