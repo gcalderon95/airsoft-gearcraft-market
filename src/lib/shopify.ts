@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-const SHOPIFY_API_VERSION = "2025-07";
+const SHOPIFY_API_VERSION = "2026-10";
 const SHOPIFY_STORE_PERMANENT_DOMAIN =
   "airsoft-3d-creations-39xig-revbxmn9.myshopify.com";
 const SHOPIFY_STOREFRONT_URL = `https://${SHOPIFY_STORE_PERMANENT_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`;
@@ -12,6 +12,9 @@ export interface ShopifyProduct {
     title: string;
     description: string;
     handle: string;
+    productType?: string;
+    collections?: { edges: Array<{ node: { id: string; title: string } }> };
+    media?: { edges: Array<{ node: { __typename: string; sources?: Array<{ url: string; format: string }> } }> };
     priceRange: {
       minVariantPrice: { amount: string; currencyCode: string };
     };
@@ -71,21 +74,25 @@ export async function storefrontApiRequest(
 }
 
 export const STOREFRONT_QUERY = `
-  query GetProducts($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
+  query GetProducts($first: Int!, $query: String, $after: String) {
+    products(first: $first, query: $query, after: $after) {
+      pageInfo { hasNextPage endCursor }
       edges {
         node {
           id
           title
           description
           handle
+          productType
+          collections(first: 50) { edges { node { id title } } }
+          media(first: 20) { edges { node { __typename ... on Model3d { sources { url format } } } } }
           priceRange {
             minVariantPrice {
               amount
               currencyCode
             }
           }
-          images(first: 5) {
+          images(first: 100) {
             edges {
               node {
                 url
@@ -127,13 +134,16 @@ export const PRODUCT_BY_HANDLE_QUERY = `
       title
       description
       handle
+      productType
+      collections(first: 50) { edges { node { id title } } }
+      media(first: 20) { edges { node { __typename ... on Model3d { sources { url format } } } } }
       priceRange {
         minVariantPrice {
           amount
           currencyCode
         }
       }
-      images(first: 5) {
+      images(first: 100) {
         edges {
           node {
             url
@@ -170,8 +180,15 @@ export async function fetchProducts(
   first = 20,
   query?: string,
 ): Promise<ShopifyProduct[]> {
-  const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query });
-  return data?.data?.products?.edges ?? [];
+  const products: ShopifyProduct[] = [];
+  let after: string | null = null;
+  do {
+    const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query, after });
+    products.push(...(data?.data?.products?.edges ?? []));
+    const pageInfo = data?.data?.products?.pageInfo;
+    after = pageInfo?.hasNextPage ? pageInfo.endCursor : null;
+  } while (after);
+  return products;
 }
 
 export async function fetchProductByHandle(
