@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Rotate3D, Images } from "lucide-react";
 import type { ShopifyProduct } from "@/lib/shopify";
 import { Button } from "@/components/ui/button";
 
-function ModelView({ src, title, poster }: { src: string; title: string; poster?: string }) {
+function ModelView({ src, title, poster }: { src: string; title: string; poster?: string | undefined }) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   useEffect(() => {

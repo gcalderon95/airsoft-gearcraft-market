@@ -1,5 +1,6 @@
 # Mejoras del catálogo
-- [ ] Carruseles de fotografías y cantidad por producto.
-- [ ] Categorías filtrables con datos reales de Shopify.
-- [ ] Visor 360° para modelos 3D disponibles, sin simular vistas inexistentes.
-- [ ] Verificar filtros y cantidades; comprobar la tienda y sus limitaciones sin productos.
+- [x] Carruseles de fotografías y cantidad por producto.
+- [x] Categorías filtrables con datos reales de Shopify.
+- [x] Visor 360° para modelos 3D disponibles, sin simular vistas inexistentes.
+- [x] Pruebas de filtros y cantidades; catálogo vacío comprobado en escritorio y móvil.
+- [ ] Verificar compra y vista 360° con un producto real: faltan productos, fotografías y modelos GLB en la tienda.
