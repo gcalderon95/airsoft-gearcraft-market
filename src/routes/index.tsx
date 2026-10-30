@@ -4,6 +4,9 @@ import { Cog, Layers, Ruler } from "lucide-react";
 import { fetchProducts } from "@/lib/shopify";
 import { ProductCard } from "@/components/ProductCard";
 import heroImage from "@/assets/hero.jpg";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { filterProducts, productCategories } from "@/lib/catalog";
 
 const productsQueryOptions = queryOptions({
   queryKey: ["shopify-products"],
@@ -39,6 +42,9 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { data: products } = useSuspenseQuery(productsQueryOptions);
+  const [category, setCategory] = useState<string | null>(null);
+  const categories = [...new Set(products.flatMap(productCategories))].sort((a, b) => a.localeCompare(b, "es"));
+  const visibleProducts = filterProducts(products, category);
 
   return (
     <main>
@@ -119,16 +125,24 @@ function Index() {
           Piezas listas para imprimir y enviar. ¿No encuentras lo que buscas?
           Pídelo a medida.
         </p>
-        {products.length === 0 ? (
+        <div className="mt-8 border-y border-border py-4">
+          <h3 className="mb-3 text-sm font-semibold">Categorías</h3>
+          <div className="flex flex-wrap gap-2" aria-label="Filtrar por categoría">
+            <Button variant={category === null ? "default" : "outline"} aria-pressed={category === null} onClick={() => setCategory(null)}>Todos ({products.length})</Button>
+            {categories.map((name) => <Button key={name} variant={category === name ? "default" : "outline"} aria-pressed={category === name} onClick={() => setCategory(name)} className="h-auto whitespace-normal py-2 text-left">{name} ({filterProducts(products, name).length})</Button>)}
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground" aria-live="polite">{visibleProducts.length} productos{category ? ` · ${category}` : ""}</p>
+        {visibleProducts.length === 0 ? (
           <div className="mt-12 rounded-xl border border-dashed border-border bg-card p-16 text-center">
-            <p className="font-display text-xl">No hay productos todavía</p>
+            <p className="font-display text-xl">No se encontraron productos</p>
             <p className="mt-2 text-muted-foreground">
               Estamos preparando el catálogo. Vuelve pronto.
             </p>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
+            {visibleProducts.map((product) => (
               <ProductCard key={product.node.id} product={product} />
             ))}
           </div>
