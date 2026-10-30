@@ -5,6 +5,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { fetchProductByHandle, type ShopifyProduct } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
+import { ProductGallery } from "@/components/ProductGallery";
+import { QuantitySelector } from "@/components/QuantitySelector";
+import { Button } from "@/components/ui/button";
+import { productCategories } from "@/lib/catalog";
 
 const productQueryOptions = (handle: string) =>
   queryOptions({
@@ -34,6 +38,10 @@ export const Route = createFileRoute("/product/$handle")({
       },
       { property: "og:type", content: "product" },
       { name: "twitter:card", content: "summary_large_image" },
+      ...(loaderData?.images.edges[0]?.node.url.startsWith("https://") ? [
+        { property: "og:image", content: loaderData.images.edges[0].node.url },
+        { name: "twitter:image", content: loaderData.images.edges[0].node.url },
+      ] : []),
     ],
   }),
   component: ProductPage,
@@ -47,6 +55,7 @@ function ProductPage() {
   const [selectedVariantId, setSelectedVariantId] = useState(
     product?.variants.edges[0]?.node.id ?? "",
   );
+  const [quantity, setQuantity] = useState(1);
 
   if (!product) return null;
 
@@ -54,7 +63,6 @@ function ProductPage() {
   const selectedVariant =
     product.variants.edges.find((v) => v.node.id === selectedVariantId)?.node ??
     product.variants.edges[0]?.node;
-  const image = product.images.edges[0]?.node;
 
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
@@ -63,9 +71,13 @@ function ProductPage() {
       variantId: selectedVariant.id,
       variantTitle: selectedVariant.title,
       price: selectedVariant.price,
-      quantity: 1,
+      quantity,
       selectedOptions: selectedVariant.selectedOptions || [],
     });
+    if (!useCartStore.getState().items.some((item) => item.variantId === selectedVariant.id)) {
+      toast.error("No se pudo añadir al carrito");
+      return;
+    }
     toast.success("Añadido al carrito", {
       description: product.title,
       position: "top-center",
@@ -83,22 +95,11 @@ function ProductPage() {
       </Link>
 
       <div className="mt-6 grid gap-10 md:grid-cols-2">
-        <div className="overflow-hidden rounded-xl border border-border bg-secondary">
-          {image ? (
-            <img
-              src={image.url}
-              alt={image.altText || product.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex aspect-square items-center justify-center text-muted-foreground">
-              Sin imagen
-            </div>
-          )}
-        </div>
+        <div className="min-w-0 self-start overflow-hidden rounded-lg border border-border bg-secondary"><ProductGallery key={product.id} product={product} /></div>
 
         <div className="flex flex-col gap-6">
           <div>
+            <p className="mb-2 text-sm text-muted-foreground">{productCategories(productNode).join(" · ")}</p>
             <h1 className="font-display text-3xl leading-tight">
               {product.title}
             </h1>
@@ -119,7 +120,7 @@ function ProductPage() {
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.edges.map(({ node: variant }) => (
-                    <button
+                    <Button
                       key={variant.id}
                       onClick={() => setSelectedVariantId(variant.id)}
                       disabled={!variant.availableForSale}
@@ -130,13 +131,15 @@ function ProductPage() {
                       } disabled:opacity-40`}
                     >
                       {variant.title}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
             )}
 
-          <button
+          <QuantitySelector value={quantity} onChange={setQuantity} disabled={isLoading} />
+          {selectedVariant && <p className="text-sm text-muted-foreground">Total: {(Number(selectedVariant.price.amount) * quantity).toFixed(2)} {selectedVariant.price.currencyCode}</p>}
+          <Button
             onClick={handleAddToCart}
             disabled={isLoading || !selectedVariant?.availableForSale}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 font-semibold text-primary-foreground transition-all hover:shadow-ember disabled:opacity-50 md:w-auto"
@@ -149,7 +152,7 @@ function ProductPage() {
             {selectedVariant?.availableForSale
               ? "Añadir al carrito"
               : "Agotado"}
-          </button>
+          </Button>
         </div>
       </div>
     </main>
