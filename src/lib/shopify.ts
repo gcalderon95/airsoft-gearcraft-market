@@ -59,10 +59,7 @@ export async function storefrontApiRequest(
   }
 
   if (!response.ok) {
-    // Store unavailable (e.g. 404 while paused/unpublished): degrade to empty data
-    // instead of crashing the whole page.
-    console.warn(`Shopify Storefront API unavailable (status ${response.status})`);
-    return;
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
 
   const data = await response.json();
