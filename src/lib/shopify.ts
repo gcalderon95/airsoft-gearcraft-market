@@ -2,9 +2,9 @@ import { toast } from "sonner";
 
 const SHOPIFY_API_VERSION = "2026-10";
 const SHOPIFY_STORE_PERMANENT_DOMAIN =
-  "airsoft-3d-creations-39xig-revbxmn9.myshopify.com";
+  "0atmnm-8q.myshopify.com";
 const SHOPIFY_STOREFRONT_URL = `https://${SHOPIFY_STORE_PERMANENT_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`;
-const SHOPIFY_STOREFRONT_TOKEN = "b923ff179db473c75022643962b9adbc";
+const SHOPIFY_STOREFRONT_TOKEN = "270b741e8dd74b55221fad1665024c16";
 
 export interface ShopifyProduct {
   node: {
