@@ -182,20 +182,29 @@ export async function fetchProducts(
 ): Promise<ShopifyProduct[]> {
   const products: ShopifyProduct[] = [];
   let after: string | null = null;
-  do {
-    const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query, after });
-    products.push(...(data?.data?.products?.edges ?? []));
-    const pageInfo = data?.data?.products?.pageInfo;
-    after = pageInfo?.hasNextPage ? pageInfo.endCursor : null;
-  } while (after);
+  try {
+    do {
+      const data = await storefrontApiRequest(STOREFRONT_QUERY, { first, query, after });
+      products.push(...(data?.data?.products?.edges ?? []));
+      const pageInfo = data?.data?.products?.pageInfo;
+      after = pageInfo?.hasNextPage ? pageInfo.endCursor : null;
+    } while (after);
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+  }
   return products;
 }
 
 export async function fetchProductByHandle(
   handle: string,
 ): Promise<ShopifyProduct["node"] | null> {
-  const data = await storefrontApiRequest(PRODUCT_BY_HANDLE_QUERY, { handle });
-  return data?.data?.productByHandle ?? null;
+  try {
+    const data = await storefrontApiRequest(PRODUCT_BY_HANDLE_QUERY, { handle });
+    return data?.data?.productByHandle ?? null;
+  } catch (error) {
+    console.error("Failed to fetch product:", error);
+    return null;
+  }
 }
 
 // ---------- Cart mutations ----------
